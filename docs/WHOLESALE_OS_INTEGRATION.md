@@ -128,3 +128,18 @@ All disposition writes use tenant-scoped API keys and the disposition idempotenc
 ## Immediate Next Engineering Task
 
 The CRM-side disposition contract is now in place. Next, import or expose the actual n8n workflow JSON from the disposition repository and wire Deal Intake, Intelligent Distribution, Buyer Onboarding, Buyer Scoring, and Deal Package Delivery to these endpoints. Do not invent workflow file paths when the sanitized reference repository does not expose them.
+
+
+## AI deal-analysis foundation
+
+InsulaCRM now stores one tenant-scoped analysis record per deal. The analysis layer preserves ARV, repair estimate, purchase price, MAO, projected assignment fee, equity estimate, confidence, score, exit strategy, source/methodology, comps, rehab scope, assumptions, risk flags, and human override state.
+
+The calculation service uses an auditable default formula: MAO = ARV × 70% − repairs − assignment fee target. Missing inputs produce partial analysis rather than fabricated values. Human overrides are explicit and require a reason when used.
+
+### API
+- GET /api/v1/deals/{dealId}/analysis
+- POST /api/v1/deals/{dealId}/analysis
+- PUT /api/v1/deals/{dealId}/analysis
+
+### Next integration step
+The acquisition/disposition deal-intake workflow should POST analysis inputs after canonical deal creation. External AI should supply evidence and confidence; InsulaCRM remains responsible for tenant-safe persistence and auditable calculations.

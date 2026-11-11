@@ -191,8 +191,8 @@ class DealPriorityQueueService
             'compliance' => $compliance,
             'work_queue' => [
                 'missing' => $missing,
-                'ready_for_offer' => empty(array_intersect($missing, ['arv', 'repair_estimate', 'offer_target', 'ranking', 'closed_comps'])),
-                'ready_for_disposition' => $activeMatches->count() > 0 && !in_array('ranking', $missing, true),
+                'ready_for_offer' => $compliance['automation_allowed'] === true && empty(array_intersect($missing, ['arv', 'repair_estimate', 'offer_target', 'ranking', 'closed_comps'])),
+                'ready_for_disposition' => $compliance['automation_allowed'] === true && $activeMatches->count() > 0 && !in_array('ranking', $missing, true),
             ],
         ];
     }

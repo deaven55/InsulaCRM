@@ -10,6 +10,7 @@ use App\Events\DealStageChanged;
 use App\Facades\Hooks;
 use App\Services\BusinessModeService;
 use App\Services\BuyerMatchService;
+use App\Services\IntegrationIdempotencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,6 +23,14 @@ class DealApiController extends Controller
         $query = Deal::withoutGlobalScopes()
             ->where('tenant_id', $tenant->id)
             ->with(['lead', 'agent']);
+
+        if ($request->filled('external_id')) {
+            $query->where('external_id', $request->external_id);
+        }
+
+        if ($request->filled('external_source')) {
+            $query->where('external_source', $request->external_source);
+        }
 
         if ($request->filled('stage')) {
             $query->where('stage', $request->stage);
@@ -55,14 +64,23 @@ class DealApiController extends Controller
     public function store(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
+        $idempotency = app(IntegrationIdempotencyService::class);
+        $replay = $idempotency->replay($request, $tenant->id, 'disposition');
+        if ($replay) {
+            return $replay;
+        }
 
         $isRE = BusinessModeService::isRealEstate($tenant);
 
         $rules = [
             'lead_id'              => 'required|integer',
+            'external_id'          => 'nullable|string|max:255',
+            'external_source'      => 'nullable|string|max:100',
             'agent_id'             => 'nullable|integer',
             'title'                => 'nullable|string|max:255',
             'stage'                => 'nullable|in:' . implode(',', array_keys(Deal::stages())),
+            'external_id'          => 'nullable|string|max:255',
+            'external_source'      => 'nullable|string|max:100',
             'contract_price'       => 'nullable|numeric|min:0',
             'earnest_money'        => 'nullable|numeric|min:0',
             'contract_date'        => 'nullable|date',
@@ -111,7 +129,24 @@ class DealApiController extends Controller
 
         AuditLog::log('deal.created_via_api', $deal);
 
-        return response()->json(['success' => true, 'deal_id' => $deal->id], 201);
+        $response = response()->json([
+            'success' => true,
+            'deal_id' => $deal->id,
+            'external_id' => $deal->external_id,
+            'external_source' => $deal->external_source,
+        ], 201);
+
+        $idempotency->remember(
+            $request,
+            $tenant->id,
+            'disposition',
+            'deal.created',
+            'deal',
+            $deal->id,
+            $response
+        );
+
+        return $response;
     }
 
     public function update(Request $request, int $id)

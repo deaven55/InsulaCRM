@@ -51,6 +51,8 @@ class Deal extends Model
     }
 
     protected $fillable = [
+        'external_id',
+        'external_source',
         'tenant_id',
         'lead_id',
         'agent_id',

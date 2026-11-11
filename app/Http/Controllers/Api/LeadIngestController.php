@@ -206,6 +206,22 @@ class LeadIngestController extends Controller
             $query->where('lead_source', $request->source);
         }
 
+        if ($request->filled('phone')) {
+            $query->where('phone', $request->phone);
+        }
+
+        if ($request->filled('email')) {
+            $query->where('email', $request->email);
+        }
+
+        if ($request->filled('external_id')) {
+            $query->where('external_id', $request->external_id);
+        }
+
+        if ($request->filled('external_source')) {
+            $query->where('external_source', $request->external_source);
+        }
+
         if ($request->filled('since')) {
             $query->where('created_at', '>=', $request->since);
         }

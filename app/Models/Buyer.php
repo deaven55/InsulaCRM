@@ -11,6 +11,8 @@ class Buyer extends Model
     use HasFactory;
 
     protected $fillable = [
+        'external_id',
+        'external_source',
         'tenant_id',
         'first_name',
         'last_name',

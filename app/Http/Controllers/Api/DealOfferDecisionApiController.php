@@ -36,7 +36,7 @@ class DealOfferDecisionApiController extends Controller
 
         $input = array_merge([
             'arv'=>$analysis?->arv,
-            'repairs'=>$analysis?->repairs,
+            'repairs'=>$analysis?->repair_estimate,
             'arv_confidence'=>$analysis?->arv_confidence,
             'comp_count'=>is_array($analysis?->comp_summary) ? count($analysis->comp_summary) : 0,
             'asking_price'=>$property->asking_price,

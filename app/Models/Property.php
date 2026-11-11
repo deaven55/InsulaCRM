@@ -12,116 +12,50 @@ class Property extends Model
     use HasFactory;
 
     protected $fillable = [
-        'external_id',
-        'external_source',
-        'tenant_id',
-        'lead_id',
-        'address',
-        'city',
-        'state',
-        'zip_code',
-        'property_type',
-        'bedrooms',
-        'bathrooms',
-        'square_footage',
-        'year_built',
-        'lot_size',
-        'estimated_value',
-        'repair_estimate',
-        'after_repair_value',
-        'asking_price',
-        'our_offer',
-        'maximum_allowable_offer',
-        'condition',
-        'distress_markers',
-        'list_price',
-        'listing_status',
-        'listed_at',
-        'sold_at',
-        'sold_price',
-        'notes',
+        'external_id','external_source','tenant_id','lead_id','owner_name','mailing_address','address','city',
+        'state','zip_code','parcel_id','property_type','bedrooms','bathrooms','square_footage','year_built',
+        'lot_size','acreage','estimated_value','assessed_value','land_value','building_value','repair_estimate',
+        'after_repair_value','asking_price','our_offer','maximum_allowable_offer','condition','distress_markers',
+        'list_price','listing_status','listed_at','sold_at','sold_price','tax_amount','tax_status',
+        'delinquent_tax_amount','zoning','legal_description','last_verified_sale_date','last_verified_sale_price',
+        'permit_records','intelligence_provenance','intelligence_last_reconciled_at','notes',
     ];
 
     protected function casts(): array
     {
         return [
-            'estimated_value' => 'decimal:2',
-            'repair_estimate' => 'decimal:2',
-            'after_repair_value' => 'decimal:2',
-            'asking_price' => 'decimal:2',
-            'our_offer' => 'decimal:2',
-            'maximum_allowable_offer' => 'decimal:2',
-            'distress_markers' => 'array',
-            'list_price' => 'decimal:2',
-            'sold_price' => 'decimal:2',
-            'listed_at' => 'date',
-            'sold_at' => 'date',
+            'estimated_value'=>'decimal:2','assessed_value'=>'decimal:2','land_value'=>'decimal:2','building_value'=>'decimal:2',
+            'repair_estimate'=>'decimal:2','after_repair_value'=>'decimal:2','asking_price'=>'decimal:2','our_offer'=>'decimal:2',
+            'maximum_allowable_offer'=>'decimal:2','distress_markers'=>'array','list_price'=>'decimal:2','sold_price'=>'decimal:2',
+            'tax_amount'=>'decimal:2','delinquent_tax_amount'=>'decimal:2','last_verified_sale_price'=>'decimal:2',
+            'acreage'=>'decimal:4','permit_records'=>'array','intelligence_provenance'=>'array',
+            'listed_at'=>'date','sold_at'=>'date','last_verified_sale_date'=>'date','intelligence_last_reconciled_at'=>'datetime',
         ];
     }
 
     protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);
-
         static::saving(function (Property $property) {
-            if ($property->isDirty('address') && $property->address) {
-                $property->address = AddressNormalizationService::normalize($property->address);
-            }
-            if ($property->isDirty('city') && $property->city) {
-                $property->city = AddressNormalizationService::normalizeCity($property->city);
-            }
-            if ($property->isDirty('state') && $property->state) {
-                $property->state = AddressNormalizationService::normalizeState($property->state);
-            }
-            if ($property->isDirty('zip_code') && $property->zip_code) {
-                $property->zip_code = AddressNormalizationService::normalizeZipCode($property->zip_code);
-            }
+            if ($property->isDirty('address') && $property->address) $property->address = AddressNormalizationService::normalize($property->address);
+            if ($property->isDirty('city') && $property->city) $property->city = AddressNormalizationService::normalizeCity($property->city);
+            if ($property->isDirty('state') && $property->state) $property->state = AddressNormalizationService::normalizeState($property->state);
+            if ($property->isDirty('zip_code') && $property->zip_code) $property->zip_code = AddressNormalizationService::normalizeZipCode($property->zip_code);
         });
     }
 
-    public function lead()
-    {
-        return $this->belongsTo(Lead::class);
-    }
-
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
-    public function comparableSales()
-    {
-        return $this->hasMany(ComparableSale::class)->latest('sale_date');
-    }
-
-    public function showings()
-    {
-        return $this->hasMany(Showing::class);
-    }
-
-    public function openHouses()
-    {
-        return $this->hasMany(OpenHouse::class);
-    }
-
-    public function getFullAddressAttribute(): string
-    {
-        return "{$this->address}, {$this->city}, {$this->state} {$this->zip_code}";
-    }
-
-    public function getAssignmentFeeAttribute(): ?float
-    {
-        if ($this->our_offer && $this->after_repair_value && $this->repair_estimate) {
-            return $this->our_offer - ($this->after_repair_value * 0.70) - $this->repair_estimate;
-        }
+    public function lead(){ return $this->belongsTo(Lead::class); }
+    public function tenant(){ return $this->belongsTo(Tenant::class); }
+    public function comparableSales(){ return $this->hasMany(ComparableSale::class)->latest('sale_date'); }
+    public function showings(){ return $this->hasMany(Showing::class); }
+    public function openHouses(){ return $this->hasMany(OpenHouse::class); }
+    public function getFullAddressAttribute(): string { return "{$this->address}, {$this->city}, {$this->state} {$this->zip_code}"; }
+    public function getAssignmentFeeAttribute(): ?float {
+        if ($this->our_offer && $this->after_repair_value && $this->repair_estimate) return $this->our_offer - ($this->after_repair_value * 0.70) - $this->repair_estimate;
         return null;
     }
-
-    public function getMaoAttribute(): ?float
-    {
-        if ($this->after_repair_value && $this->repair_estimate) {
-            return ($this->after_repair_value * 0.70) - $this->repair_estimate;
-        }
+    public function getMaoAttribute(): ?float {
+        if ($this->after_repair_value && $this->repair_estimate) return ($this->after_repair_value * 0.70) - $this->repair_estimate;
         return null;
     }
 }

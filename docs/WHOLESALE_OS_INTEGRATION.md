@@ -183,3 +183,10 @@ The disposition repo now contains WF-012, which accepts an evidence bundle, stor
 The disposition automation now includes WF-013, which can collect property research and supplied web-page evidence through configurable external providers. Provider output is normalized and routed through WF-012 into the InsulaCRM evidence store before AI analysis.
 
 Provider credentials remain n8n environment secrets. InsulaCRM stores evidence payloads and provenance, not provider credentials.
+
+
+## Property intelligence reconciliation
+
+`POST /api/v1/deals/{dealId}/property-intelligence/reconcile` accepts the aggregated evidence bundle produced by WF-014. It reconciles evidence-constrained structured facts into the canonical tenant property linked through the deal's lead. Source priority is deterministic: land records > property/GIS records > tax records > permits > county datasets > other public records > user-supplied data; confidence and observation time break ties. Existing stronger provenance is preserved. Canonical fields retain `intelligence_provenance` so each selected value can be traced to its supporting evidence.
+
+Migration `2026_11_11_000005_add_property_intelligence_fields.php` adds owner, mailing address, parcel, assessment/tax, acreage, zoning, legal description, verified sale, permit, and reconciliation provenance fields.

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\BuyerApiController;
 use App\Http\Controllers\Api\DealApiController;
 use App\Http\Controllers\Api\DealAnalysisApiController;
 use App\Http\Controllers\Api\DealComparableSalesApiController;
+use App\Http\Controllers\Api\DealComplianceApiController;
 use App\Http\Controllers\Api\DealOfferDecisionApiController;
 use App\Http\Controllers\Api\DealRankingApiController;
 use App\Http\Controllers\Api\DealBuyerMatchApiController;
@@ -33,6 +34,7 @@ Route::prefix('v1')->middleware(['api.key', 'throttle:api', 'api.log'])->group(f
     Route::post('/deals/{dealId}/comps/recalculate', [DealComparableSalesApiController::class, 'recalculate']);
     Route::post('/deals/{dealId}/offer-decision/calculate', [DealOfferDecisionApiController::class, 'calculate']);
     Route::post('/deals/{dealId}/rank', [DealRankingApiController::class, 'calculate']);
+    Route::post('/deals/{dealId}/compliance/check', [DealComplianceApiController::class, 'check']);
     Route::get('/deals/{dealId}/evidence', [DealEvidenceApiController::class, 'index']);
     Route::post('/deals/{dealId}/property-intelligence/reconcile', [PropertyIntelligenceApiController::class, 'reconcile']);
     Route::post('/deals/{dealId}/evidence', [DealEvidenceApiController::class, 'store']);

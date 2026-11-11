@@ -18,6 +18,7 @@ class DealAnalysis extends Model
         'assumptions', 'risk_flags', 'calculation_snapshot',
         'arv_human_override', 'repair_human_override', 'mao_human_override',
         'offer_low', 'offer_target', 'offer_high', 'decision', 'decision_score', 'decision_factors', 'offer_assumptions',
+        'ranking_score', 'ranking_grade', 'ranking_factors', 'ranking_risk_flags', 'ranked_at',
         'human_override_reason', 'analyzed_at', 'analyzed_by',
     ];
 
@@ -49,6 +50,10 @@ class DealAnalysis extends Model
             'decision_score' => 'decimal:2',
             'decision_factors' => 'array',
             'offer_assumptions' => 'array',
+            'ranking_score' => 'decimal:2',
+            'ranking_factors' => 'array',
+            'ranking_risk_flags' => 'array',
+            'ranked_at' => 'datetime',
         ];
     }
 

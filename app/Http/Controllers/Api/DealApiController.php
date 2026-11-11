@@ -114,6 +114,24 @@ class DealApiController extends Controller
         $data['stage'] = $data['stage'] ?? \App\Services\BusinessModeService::getDefaultStage();
         $data['stage_changed_at'] = now();
 
+        if (!empty($data['external_id']) && !empty($data['external_source'])) {
+            $existing = Deal::withoutGlobalScopes()
+                ->where('tenant_id', $tenant->id)
+                ->where('external_id', $data['external_id'])
+                ->where('external_source', $data['external_source'])
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'success' => true,
+                    'duplicate' => true,
+                    'deal_id' => $existing->id,
+                    'external_id' => $existing->external_id,
+                    'external_source' => $existing->external_source,
+                ]);
+            }
+        }
+
         // Verify lead belongs to tenant
         $lead = \App\Models\Lead::withoutGlobalScopes()
             ->where('tenant_id', $tenant->id)

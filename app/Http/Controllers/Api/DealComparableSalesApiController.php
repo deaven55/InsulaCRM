@@ -7,6 +7,7 @@ use App\Models\ComparableSale;
 use App\Models\Deal;
 use App\Models\Property;
 use App\Services\ComparableSalesArvService;
+use App\Services\IntegrationIdempotencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -28,6 +29,10 @@ class DealComparableSalesApiController extends Controller
     public function recalculate(Request $request, int $dealId)
     {
         [$tenant, $deal, $property] = $this->context($request, $dealId);
+
+        if ($replay = app(IntegrationIdempotencyService::class)->replay($request, $tenant->id, 'comparable_sales_api')) {
+            return $replay;
+        }
 
         $validator = Validator::make($request->all(), [
             'comps' => 'required|array|min:1|max:50',
@@ -117,13 +122,25 @@ class DealComparableSalesApiController extends Controller
             );
         }
 
-        return response()->json([
+        $response = response()->json([
             'success' => true,
             'deal_id' => $deal->id,
             'property_id' => $property->id,
             'calculation' => $calculation,
             'comps' => $persisted,
         ]);
+
+        app(IntegrationIdempotencyService::class)->remember(
+            $request,
+            $tenant->id,
+            'comparable_sales_api',
+            'comps_recalculated',
+            'deal',
+            $deal->id,
+            $response
+        );
+
+        return $response;
     }
 
     private function context(Request $request, int $dealId): array

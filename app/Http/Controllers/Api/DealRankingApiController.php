@@ -8,6 +8,7 @@ use App\Models\DealAnalysis;
 use App\Models\DealBuyerMatch;
 use App\Models\Property;
 use App\Services\DealRankingService;
+use App\Services\IntegrationIdempotencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,6 +17,9 @@ class DealRankingApiController extends Controller
     public function calculate(Request $request, int $dealId)
     {
         $tenant = $request->attributes->get('tenant');
+        $idempotency = app(IntegrationIdempotencyService::class);
+        $replay = $idempotency->replay($request, $tenant->id, 'deal_ranking');
+        if ($replay) return $replay;
 
         $deal = Deal::withoutGlobalScopes()
             ->where('tenant_id', $tenant->id)
@@ -86,7 +90,7 @@ class DealRankingApiController extends Controller
                 ->whereIn('status', ['pending', 'interested', 'responded'])
                 ->count(),
             'property_completeness' => $propertyCompleteness,
-            'distress_signal_count' => 0,
+            'distress_signal_count' => $this->distressSignalCount($property),
             'risk_flag_count' => count($riskFlags),
         ], $validator->validated());
 
@@ -107,11 +111,32 @@ class DealRankingApiController extends Controller
             'ranked_at' => now(),
         ])->save();
 
-        return response()->json([
+        $response = response()->json([
             'success' => true,
             'deal_id' => $deal->id,
             'property_id' => $property->id,
             'ranking' => $result,
         ]);
+
+        $idempotency->remember(
+            $request,
+            $tenant->id,
+            'deal_ranking',
+            'deal.ranked',
+            'deal',
+            $deal->id,
+            $response
+        );
+
+        return $response;
+    }
+
+    private function distressSignalCount(Property $property): int
+    {
+        $signals = 0;
+        if (is_numeric($property->delinquent_tax_amount) && (float) $property->delinquent_tax_amount > 0) $signals++;
+        if (is_string($property->tax_status) && str_contains(strtolower($property->tax_status), 'delinquent')) $signals++;
+        if (!empty($property->permit_records) && is_array($property->permit_records)) $signals++;
+        return $signals;
     }
 }

@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Deal;
-
 class DealAnalysisService
 {
     public function calculate(array $input, $existing = null): array
@@ -41,7 +39,7 @@ class DealAnalysisService
             'arv' => $arv,
             'repair_estimate' => $repairs,
             'purchase_price' => $purchase,
-            'assignment_fee_target' => $assignmentTarget,
+            'assignment_fee_target' => $assignmentTarget ?? 10000,
             'mao' => $mao,
             'projected_assignment_fee' => $projectedAssignment,
             'estimated_equity' => $equity,

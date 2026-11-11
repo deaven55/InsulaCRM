@@ -13,7 +13,7 @@ class Property extends Model
 
     protected $fillable = [
         'external_id','external_source','tenant_id','lead_id','owner_name','mailing_address','address','city',
-        'state','zip_code','parcel_id','property_type','bedrooms','bathrooms','square_footage','year_built',
+        'state','county','zip_code','parcel_id','property_type','bedrooms','bathrooms','square_footage','year_built',
         'lot_size','acreage','estimated_value','assessed_value','land_value','building_value','repair_estimate',
         'after_repair_value','asking_price','our_offer','maximum_allowable_offer','condition','distress_markers',
         'list_price','listing_status','listed_at','sold_at','sold_price','tax_amount','tax_status',

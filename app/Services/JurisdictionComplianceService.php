@@ -20,6 +20,8 @@ class JurisdictionComplianceService
                 'basis' => 'North Carolina General Statutes Chapter 93A requires a license to act as a real estate broker; broker activity includes negotiating or buying/selling real estate for others.',
                 'source' => 'NCGS 93A-1 and 93A-2',
                 'notes' => [
+                    'NCREC states a real estate license is not required for a bona fide buyer to assign their rights and interests in a purchase contract to a third party.',
+                    'NCREC also warns that conduct can become unlicensed brokerage when the wholesaler solicits sellers without intending to purchase, misrepresents ownership, negotiates between seller and buyer, or markets buyers generally rather than a specific assigned contract.',
                     'Do not assume that calling a transaction a wholesale deal removes broker-law requirements.',
                     'Principal-investor activity can involve different facts from acting for another party; route the exact transaction structure to qualified North Carolina counsel/NCREC guidance.',
                     'Do not treat proposed or failed legislation as current law.',

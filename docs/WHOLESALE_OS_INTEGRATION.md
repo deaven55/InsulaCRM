@@ -51,8 +51,9 @@ External automation may stage and enrich data, but it should write through the I
 
 Existing API v1 already exposes:
 - GET/POST/PUT leads
-- GET/POST/PUT deals
-- GET/POST/PUT buyers
+- GET/POST/PUT deals, including external identity lookup and disposition-safe idempotent creation
+- GET/POST/PUT buyers, including external identity, proof-of-funds and buyer scoring fields
+- GET/POST/PUT deal-buyer matches plus match recalculation
 - GET/POST/PUT properties
 - GET/POST activities
 - GET stats
@@ -93,6 +94,8 @@ Integration work should extend this contract before adding direct database coupl
 
 ### Phase 4 — Disposition
 - Connect the ten disposition workflows to InsulaCRM.
+- Use the deal/buyer/match API as the stable integration boundary.
+- Add first-class distribution/outreach persistence only where the existing match model cannot represent the workflow state.
 - Add buyer criteria and distribution records if not already sufficient.
 - Rank buyers by market, price, property type, strategy, tier and engagement.
 - Track dispatch, response, follow-up and package delivery.
@@ -102,6 +105,26 @@ Integration work should extend this contract before adding direct database coupl
 - Borrow useful BIDS dashboard UX patterns where they improve the existing CRM.
 - Build acquisition, deal, disposition and analytics views directly into the tenant-aware application.
 
+## Disposition API Contract
+
+### Deals
+- GET /api/v1/deals?external_id=...&external_source=...
+- POST /api/v1/deals with external_id, external_source, seller/lead linkage and deal economics.
+- PUT /api/v1/deals/{id} for stage, pricing and disposition lifecycle updates.
+
+### Buyers
+- GET /api/v1/buyers?external_id=...&external_source=...
+- POST /api/v1/buyers with external identity, buy-box criteria, POF metadata and buyer score.
+- PUT /api/v1/buyers/{id} for criteria, POF and score updates.
+
+### Buyer Matching
+- GET /api/v1/deals/{dealId}/matches
+- POST /api/v1/deals/{dealId}/matches to upsert a ranked buyer match.
+- POST /api/v1/deals/{dealId}/matches/recalculate to run the existing tenant-aware buyer matching service.
+- PUT /api/v1/deals/{dealId}/matches/{matchId} for outreach/response state.
+
+All disposition writes use tenant-scoped API keys and the disposition idempotency namespace where a request can be replayed safely.
+
 ## Immediate Next Engineering Task
 
-Implement the integration foundation first. Do not start by importing all n8n workflows blindly. Establish the data contract, idempotency, tenant boundaries, and external-ID mapping before connecting automation.
+The CRM-side disposition contract is now in place. Next, import or expose the actual n8n workflow JSON from the disposition repository and wire Deal Intake, Intelligent Distribution, Buyer Onboarding, Buyer Scoring, and Deal Package Delivery to these endpoints. Do not invent workflow file paths when the sanitized reference repository does not expose them.

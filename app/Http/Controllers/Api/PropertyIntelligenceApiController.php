@@ -118,10 +118,31 @@ class PropertyIntelligenceApiController extends Controller
             $update[$column] = $value;
         }
 
-        // Never overwrite a populated canonical value with a lower-confidence reconciliation.
-        foreach ($update as $column => $value) {
-            if ($property->{$column} !== null && $property->{$column} !== '' && !array_key_exists($column, $provenance)) {
-                unset($update[$column]);
+        // Preserve an existing canonical value when the new candidate is weaker.
+        foreach ($provenance as $field => $meta) {
+            $column = $mapping[$field] ?? $field;
+            $existing = is_array($property->intelligence_provenance)
+                ? ($property->intelligence_provenance[$field]['selected'] ?? null)
+                : null;
+
+            if ($existing) {
+                $existingRank = [
+                    (int)($existing['priority'] ?? 0),
+                    (float)($existing['confidence'] ?? 0),
+                    (string)($existing['observed_at'] ?? ''),
+                ];
+                $newRank = [
+                    (int)($meta['selected']['priority'] ?? 0),
+                    (float)($meta['selected']['confidence'] ?? 0),
+                    (string)($meta['selected']['observed_at'] ?? ''),
+                ];
+                if ($existingRank > $newRank) {
+                    unset($update[$column]);
+                    $provenance[$field] = [
+                        'selected' => $existing,
+                        'alternatives' => array_slice(array_merge([$meta['selected']], $meta['alternatives'] ?? []), 0, 4),
+                    ];
+                }
             }
         }
 

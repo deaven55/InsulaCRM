@@ -68,6 +68,10 @@ class DealPriorityQueueService
                 $q->whereRaw('LOWER(city) = ?', [strtolower(trim($filters['city']))]));
         }
 
+        if (!empty($filters['agent_id'])) {
+            $query->where('deals.agent_id', (int) $filters['agent_id']);
+        }
+
         if (!empty($filters['stage'])) {
             $query->where('deals.stage', $filters['stage']);
         }

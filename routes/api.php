@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ActivityApiController;
 use App\Http\Controllers\Api\BuyerApiController;
 use App\Http\Controllers\Api\DealApiController;
+use App\Http\Controllers\Api\DealBuyerMatchApiController;
 use App\Http\Controllers\Api\LeadIngestController;
 use App\Http\Controllers\Api\PropertyApiController;
 use App\Http\Controllers\Api\StatsApiController;
@@ -32,6 +33,10 @@ Route::prefix('v1')->middleware(['api.key', 'throttle:api', 'api.log'])->group(f
     Route::get('/deals/stages', [DealApiController::class, 'stages']);
     Route::get('/deals/{id}', [DealApiController::class, 'show']);
     Route::put('/deals/{id}', [DealApiController::class, 'update']);
+    Route::get('/deals/{dealId}/matches', [DealBuyerMatchApiController::class, 'index']);
+    Route::post('/deals/{dealId}/matches', [DealBuyerMatchApiController::class, 'store']);
+    Route::post('/deals/{dealId}/matches/recalculate', [DealBuyerMatchApiController::class, 'match']);
+    Route::put('/deals/{dealId}/matches/{matchId}', [DealBuyerMatchApiController::class, 'update']);
 
     // Buyers
     Route::get('/buyers', [BuyerApiController::class, 'index']);

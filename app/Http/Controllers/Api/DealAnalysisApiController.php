@@ -66,7 +66,19 @@ class DealAnalysisApiController extends Controller
             ->where('deal_id', $deal->id)
             ->first();
 
-        $data = app(DealAnalysisService::class)->calculate($validator->validated(), $existing);
+        $input = $validator->validated();
+        if (!array_key_exists('purchase_price', $input) && $deal->contract_price !== null) {
+            $input['purchase_price'] = $deal->contract_price;
+        }
+
+        $hasOverride = ($input['arv_human_override'] ?? false)
+            || ($input['repair_human_override'] ?? false)
+            || ($input['mao_human_override'] ?? false);
+        if ($hasOverride && empty($input['human_override_reason'])) {
+            return response()->json(['error' => 'human_override_reason is required when a human override is enabled.'], 422);
+        }
+
+        $data = app(DealAnalysisService::class)->calculate($input, $existing);
 
         $analysis = DealAnalysis::withoutGlobalScopes()->updateOrCreate(
             ['tenant_id' => $tenant->id, 'deal_id' => $deal->id],

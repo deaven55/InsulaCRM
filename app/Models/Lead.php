@@ -12,6 +12,8 @@ class Lead extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'external_id',
+        'external_source',
         'tenant_id',
         'agent_id',
         'first_name',

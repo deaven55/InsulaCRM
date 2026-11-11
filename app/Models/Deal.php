@@ -135,6 +135,11 @@ class Deal extends Model
         return $this->hasMany(DealBuyerMatch::class);
     }
 
+    public function analysis()
+    {
+        return $this->hasOne(DealAnalysis::class);
+    }
+
     public function activities()
     {
         return $this->hasMany(Activity::class);

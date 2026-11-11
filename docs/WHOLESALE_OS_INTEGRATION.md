@@ -143,3 +143,36 @@ The calculation service uses an auditable default formula: MAO = ARV × 70% − 
 
 ### Next integration step
 The acquisition/disposition deal-intake workflow should POST analysis inputs after canonical deal creation. External AI should supply evidence and confidence; InsulaCRM remains responsible for tenant-safe persistence and auditable calculations.
+
+
+## Property intelligence evidence layer
+
+InsulaCRM now stores auditable evidence separately from the AI-derived deal analysis.
+
+### Evidence API
+- `GET /api/v1/deals/{dealId}/evidence`
+- `POST /api/v1/deals/{dealId}/evidence`
+
+Evidence records contain:
+- `evidence_type`
+- `source`
+- `source_record_id`
+- `content_hash`
+- `observed_at`
+- `confidence`
+- arbitrary JSON `payload`
+
+The evidence layer is intentionally source-neutral. It can hold BatchData/PropWire/public-record/property-recon/comp/inspection evidence without forcing a provider-specific schema into the CRM.
+
+### Evidence-first AI rule
+
+AI deal analysis should consume stored evidence and clearly distinguish:
+1. observed facts,
+2. source-derived estimates,
+3. model calculations,
+4. assumptions,
+5. missing information.
+
+The AI must not fabricate comparable sales, market facts, repairs, or property characteristics.
+
+The disposition repo now contains WF-012, which accepts an evidence bundle, stores it in InsulaCRM, and forwards an evidence-first context to WF-011 for analysis.

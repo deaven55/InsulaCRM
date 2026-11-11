@@ -176,3 +176,10 @@ AI deal analysis should consume stored evidence and clearly distinguish:
 The AI must not fabricate comparable sales, market facts, repairs, or property characteristics.
 
 The disposition repo now contains WF-012, which accepts an evidence bundle, stores it in InsulaCRM, and forwards an evidence-first context to WF-011 for analysis.
+
+
+## External property recon adapter
+
+The disposition automation now includes WF-013, which can collect property research and supplied web-page evidence through configurable external providers. Provider output is normalized and routed through WF-012 into the InsulaCRM evidence store before AI analysis.
+
+Provider credentials remain n8n environment secrets. InsulaCRM stores evidence payloads and provenance, not provider credentials.

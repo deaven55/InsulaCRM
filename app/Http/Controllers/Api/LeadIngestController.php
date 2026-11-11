@@ -12,6 +12,7 @@ use App\Services\CustomFieldService;
 use App\Services\LeadDistributionService;
 use App\Services\MotivationScoreService;
 use App\Services\ZipTimezoneService;
+use App\Services\IntegrationIdempotencyService;
 use Illuminate\Http\Request;
 use App\Notifications\LeadAssigned;
 use Illuminate\Support\Facades\Validator;
@@ -27,6 +28,11 @@ class LeadIngestController extends Controller
     public function store(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
+        $idempotency = app(IntegrationIdempotencyService::class);
+        $replay = $idempotency->replay($request, $tenant->id, 'acquisition');
+        if ($replay) {
+            return $replay;
+        }
 
         $validator = Validator::make($request->all(), [
             // Lead fields
@@ -49,6 +55,7 @@ class LeadIngestController extends Controller
             'utm_medium'     => 'nullable|string|max:100',
             'utm_campaign'   => 'nullable|string|max:100',
             'external_id'    => 'nullable|string|max:255',
+            'external_source' => 'nullable|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -63,14 +70,26 @@ class LeadIngestController extends Controller
         // Resolve lead source: explicit source > utm_source > 'api'
         $leadSource = $this->resolveLeadSource($data, $tenant);
 
+        // Prefer a stable external identity when supplied by an automation source.
+        $existing = null;
+        if (!empty($data['external_id']) && !empty($data['external_source'])) {
+            $existing = Lead::withoutGlobalScopes()
+                ->where('tenant_id', $tenant->id)
+                ->where('external_id', $data['external_id'])
+                ->where('external_source', $data['external_source'])
+                ->first();
+        }
+
         // Check for duplicate (same phone or email within tenant)
-        $existing = $this->findDuplicate($data, $tenant);
+        $existing ??= $this->findDuplicate($data, $tenant);
         if ($existing) {
             return response()->json([
                 'success' => true,
                 'duplicate' => true,
                 'message' => 'Lead already exists.',
                 'lead_id' => $existing->id,
+                'external_id' => $existing->external_id,
+                'external_source' => $existing->external_source,
             ], 200);
         }
 
@@ -85,6 +104,8 @@ class LeadIngestController extends Controller
             'status'     => 'new',
             'temperature' => 'warm',
             'notes'      => $this->buildNotes($data),
+            'external_id' => $data['external_id'] ?? null,
+            'external_source' => $data['external_source'] ?? null,
         ]);
 
         // Auto-detect timezone from property zip
@@ -150,12 +171,18 @@ class LeadIngestController extends Controller
             'status' => 'new',
         ], $tenant->id);
 
-        return response()->json([
+        $response = response()->json([
             'success' => true,
             'lead_id' => $lead->id,
             'source'  => $leadSource,
             'property_id' => $property?->id,
+            'external_id' => $lead->external_id,
+            'external_source' => $lead->external_source,
         ], 201);
+
+        $idempotency->remember($request, $tenant->id, 'acquisition', 'lead.created', 'lead', $lead->id, $response);
+
+        return $response;
     }
 
     /**

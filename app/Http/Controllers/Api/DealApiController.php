@@ -74,8 +74,6 @@ class DealApiController extends Controller
 
         $rules = [
             'lead_id'              => 'required|integer',
-            'external_id'          => 'nullable|string|max:255',
-            'external_source'      => 'nullable|string|max:100',
             'agent_id'             => 'nullable|integer',
             'title'                => 'nullable|string|max:255',
             'stage'                => 'nullable|in:' . implode(',', array_keys(Deal::stages())),
@@ -161,6 +159,8 @@ class DealApiController extends Controller
 
         $rules = [
             'stage'                => 'nullable|in:' . implode(',', array_keys(Deal::stages())),
+            'external_id'          => 'nullable|string|max:255',
+            'external_source'      => 'nullable|string|max:100',
             'contract_price'       => 'nullable|numeric|min:0',
             'earnest_money'        => 'nullable|numeric|min:0',
             'contract_date'        => 'nullable|date',

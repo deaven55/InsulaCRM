@@ -39,6 +39,7 @@ Route::prefix('v1')->middleware(['api.key', 'throttle:api', 'api.log'])->group(f
     Route::post('/deals/{dealId}/analysis', [DealAnalysisApiController::class, 'store']);
     Route::put('/deals/{dealId}/analysis', [DealAnalysisApiController::class, 'update']);
     Route::get('/deals/{dealId}/evidence', [DealEvidenceApiController::class, 'index']);
+    Route::post('/deals/{dealId}/property-intelligence/reconcile', [PropertyIntelligenceApiController::class, 'reconcile']);
     Route::post('/deals/{dealId}/evidence', [DealEvidenceApiController::class, 'store']);
     Route::get('/deals/{dealId}/matches', [DealBuyerMatchApiController::class, 'index']);
     Route::post('/deals/{dealId}/matches', [DealBuyerMatchApiController::class, 'store']);

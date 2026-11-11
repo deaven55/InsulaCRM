@@ -101,6 +101,24 @@ class BuyerApiController extends Controller
         $data = $validator->validated();
         $data['tenant_id'] = $tenant->id;
 
+        if (!empty($data['external_id']) && !empty($data['external_source'])) {
+            $existing = Buyer::withoutGlobalScopes()
+                ->where('tenant_id', $tenant->id)
+                ->where('external_id', $data['external_id'])
+                ->where('external_source', $data['external_source'])
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'success' => true,
+                    'duplicate' => true,
+                    'buyer_id' => $existing->id,
+                    'external_id' => $existing->external_id,
+                    'external_source' => $existing->external_source,
+                ]);
+            }
+        }
+
         // Duplicate check by email
         if (!empty($data['email'])) {
             $existing = Buyer::withoutGlobalScopes()

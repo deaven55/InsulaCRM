@@ -78,14 +78,19 @@ class BuyerApiController extends Controller
             'phone'                   => 'nullable|string|max:20',
             'email'                   => 'nullable|email|max:255',
             'max_purchase_price'      => 'nullable|numeric|min:0',
+            'min_purchase_price'      => 'nullable|numeric|min:0',
             'preferred_property_types' => 'nullable|array',
+            'preferred_strategies'     => 'nullable|array',
+            'preferred_conditions'    => 'nullable|array',
             'preferred_states'        => 'nullable|array',
             'preferred_zip_codes'     => 'nullable|array',
+            'monthly_capacity'        => 'nullable|integer|min:0',
             'notes'                   => 'nullable|string',
             'pof_verified'            => 'nullable|boolean',
             'pof_amount'              => 'nullable|numeric|min:0',
             'pof_verified_at'         => 'nullable|date',
             'buyer_score'             => 'nullable|integer|min:0|max:100',
+            'buyer_tier'              => 'nullable|in:hot,warm,cold',
         ];
 
         if (!$isRE) {

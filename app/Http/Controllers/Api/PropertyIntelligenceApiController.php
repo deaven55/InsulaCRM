@@ -23,7 +23,7 @@ class PropertyIntelligenceApiController extends Controller
     ];
 
     private const CANONICAL_FIELDS = [
-        'owner_name','mailing_address','property_address','city','state','zip_code','parcel_id',
+        'owner_name','mailing_address','property_address','city','state','county','zip_code','parcel_id',
         'property_type','bedrooms','bathrooms','building_sqft','square_footage','year_built',
         'lot_size','acreage','assessed_value','land_value','building_value','tax_amount','tax_status',
         'delinquent_tax_amount','zoning','legal_description','sale_date','sale_price','tax_status',

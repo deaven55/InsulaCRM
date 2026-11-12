@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DealAnalysisApiController;
 use App\Http\Controllers\Api\DealComparableSalesApiController;
 use App\Http\Controllers\Api\DealComplianceApiController;
 use App\Http\Controllers\Api\DealOfferDecisionApiController;
+use App\Http\Controllers\Api\DealPriorityQueueApiController;
 use App\Http\Controllers\Api\DealRankingApiController;
 use App\Http\Controllers\Api\DealBuyerMatchApiController;
 use App\Http\Controllers\Api\DealEvidenceApiController;
@@ -22,7 +23,8 @@ Route::prefix('v1')->middleware(['api.key', 'throttle:api', 'api.log'])->group(f
     Route::get('/leads/{id}', [LeadIngestController::class, 'show']);
     Route::put('/leads/{id}', [LeadIngestController::class, 'update']);
 
-    Route::get('/deals', [DealApiController::class, 'index']);\n    Route::get('/deal-queue', [DealPriorityQueueApiController::class, 'index']);
+    Route::get('/deals', [DealApiController::class, 'index']);
+    Route::get('/deal-queue', [DealPriorityQueueApiController::class, 'index']);
     Route::post('/deals', [DealApiController::class, 'store']);
     Route::get('/deals/stages', [DealApiController::class, 'stages']);
     Route::get('/deals/{id}', [DealApiController::class, 'show']);

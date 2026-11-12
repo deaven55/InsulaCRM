@@ -22,16 +22,16 @@ return new class extends Migration
             $table->decimal('latitude', 10, 7)->nullable()->after('zip_code');
             $table->decimal('longitude', 10, 7)->nullable()->after('latitude');
             $table->decimal('similarity_score', 6, 2)->nullable()->after('distance_miles');
-            $table->index(['tenant_id', 'property_id', 'external_source', 'external_id']);
-            $table->index(['tenant_id', 'property_id', 'sale_date']);
+            $table->index(['tenant_id', 'property_id', 'external_source', 'external_id'], 'comps_tenant_property_source_ext_idx');
+            $table->index(['tenant_id', 'property_id', 'sale_date'], 'comps_tenant_property_sale_date_idx');
         });
     }
 
     public function down(): void
     {
         Schema::table('comparable_sales', function (Blueprint $table) {
-            $table->dropIndex(['tenant_id', 'property_id', 'external_source', 'external_id']);
-            $table->dropIndex(['tenant_id', 'property_id', 'sale_date']);
+            $table->dropIndex('comps_tenant_property_source_ext_idx');
+            $table->dropIndex('comps_tenant_property_sale_date_idx');
             $table->dropColumn([
                 'external_id', 'external_source', 'source_record_id', 'source_url',
                 'source_observed_at', 'confidence', 'property_type', 'city', 'state',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Buyer;
 use App\Services\BusinessModeService;
+use App\Services\IntegrationIdempotencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,6 +18,14 @@ class BuyerApiController extends Controller
 
         $query = Buyer::withoutGlobalScopes()
             ->where('tenant_id', $tenant->id);
+
+        if ($request->filled('external_id')) {
+            $query->where('external_id', $request->external_id);
+        }
+
+        if ($request->filled('external_source')) {
+            $query->where('external_source', $request->external_source);
+        }
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -52,20 +61,36 @@ class BuyerApiController extends Controller
     public function store(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
+        $idempotency = app(IntegrationIdempotencyService::class);
+        $replay = $idempotency->replay($request, $tenant->id, 'disposition');
+        if ($replay) {
+            return $replay;
+        }
         $terms = BusinessModeService::getTerminology($tenant);
         $isRE = BusinessModeService::isRealEstate($tenant);
 
         $rules = [
+            'external_id'             => 'nullable|string|max:255',
+            'external_source'         => 'nullable|string|max:100',
             'first_name'              => 'required|string|max:255',
             'last_name'               => 'required|string|max:255',
             'company'                 => 'nullable|string|max:255',
             'phone'                   => 'nullable|string|max:20',
             'email'                   => 'nullable|email|max:255',
             'max_purchase_price'      => 'nullable|numeric|min:0',
+            'min_purchase_price'      => 'nullable|numeric|min:0',
             'preferred_property_types' => 'nullable|array',
+            'preferred_strategies'     => 'nullable|array',
+            'preferred_conditions'    => 'nullable|array',
             'preferred_states'        => 'nullable|array',
             'preferred_zip_codes'     => 'nullable|array',
+            'monthly_capacity'        => 'nullable|integer|min:0',
             'notes'                   => 'nullable|string',
+            'pof_verified'            => 'nullable|boolean',
+            'pof_amount'              => 'nullable|numeric|min:0',
+            'pof_verified_at'         => 'nullable|date',
+            'buyer_score'             => 'nullable|integer|min:0|max:100',
+            'buyer_tier'              => 'nullable|in:hot,warm,cold',
         ];
 
         if (!$isRE) {
@@ -80,6 +105,24 @@ class BuyerApiController extends Controller
 
         $data = $validator->validated();
         $data['tenant_id'] = $tenant->id;
+
+        if (!empty($data['external_id']) && !empty($data['external_source'])) {
+            $existing = Buyer::withoutGlobalScopes()
+                ->where('tenant_id', $tenant->id)
+                ->where('external_id', $data['external_id'])
+                ->where('external_source', $data['external_source'])
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'success' => true,
+                    'duplicate' => true,
+                    'buyer_id' => $existing->id,
+                    'external_id' => $existing->external_id,
+                    'external_source' => $existing->external_source,
+                ]);
+            }
+        }
 
         // Duplicate check by email
         if (!empty($data['email'])) {
@@ -101,7 +144,24 @@ class BuyerApiController extends Controller
 
         AuditLog::log('buyer.created_via_api', $buyer);
 
-        return response()->json(['success' => true, 'buyer_id' => $buyer->id], 201);
+        $response = response()->json([
+            'success' => true,
+            'buyer_id' => $buyer->id,
+            'external_id' => $buyer->external_id,
+            'external_source' => $buyer->external_source,
+        ], 201);
+
+        $idempotency->remember(
+            $request,
+            $tenant->id,
+            'disposition',
+            'buyer.created',
+            'buyer',
+            $buyer->id,
+            $response
+        );
+
+        return $response;
     }
 
     public function update(Request $request, int $id)
@@ -114,6 +174,8 @@ class BuyerApiController extends Controller
             ->findOrFail($id);
 
         $rules = [
+            'external_id'             => 'nullable|string|max:255',
+            'external_source'         => 'nullable|string|max:100',
             'first_name'              => 'nullable|string|max:255',
             'last_name'               => 'nullable|string|max:255',
             'company'                 => 'nullable|string|max:255',
@@ -124,6 +186,10 @@ class BuyerApiController extends Controller
             'preferred_states'        => 'nullable|array',
             'preferred_zip_codes'     => 'nullable|array',
             'notes'                   => 'nullable|string',
+            'pof_verified'            => 'nullable|boolean',
+            'pof_amount'              => 'nullable|numeric|min:0',
+            'pof_verified_at'         => 'nullable|date',
+            'buyer_score'             => 'nullable|integer|min:0|max:100',
         ];
 
         if (!$isRE) {

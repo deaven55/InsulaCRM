@@ -51,6 +51,8 @@ class Deal extends Model
     }
 
     protected $fillable = [
+        'external_id',
+        'external_source',
         'tenant_id',
         'lead_id',
         'agent_id',
@@ -131,6 +133,16 @@ class Deal extends Model
     public function buyerMatches()
     {
         return $this->hasMany(DealBuyerMatch::class);
+    }
+
+    public function analysis()
+    {
+        return $this->hasOne(DealAnalysis::class);
+    }
+
+    public function evidence()
+    {
+        return $this->hasMany(DealEvidence::class);
     }
 
     public function activities()

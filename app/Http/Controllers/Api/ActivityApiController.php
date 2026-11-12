@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Services\CustomFieldService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\IntegrationIdempotencyService;
 
 class ActivityApiController extends Controller
 {
@@ -45,6 +46,11 @@ class ActivityApiController extends Controller
     public function store(Request $request)
     {
         $tenant = $request->attributes->get('tenant');
+        $idempotency = app(IntegrationIdempotencyService::class);
+        $replay = $idempotency->replay($request, $tenant->id, 'acquisition');
+        if ($replay) {
+            return $replay;
+        }
 
         $validTypes = CustomFieldService::getValidSlugs('activity_type', $tenant);
         $validTypes[] = 'stage_change';
@@ -82,6 +88,9 @@ class ActivityApiController extends Controller
         event(new ActivityLogged($activity));
         Hooks::doAction('activity.logged', $activity);
 
-        return response()->json(['success' => true, 'activity_id' => $activity->id], 201);
+        $response = response()->json(['success' => true, 'activity_id' => $activity->id], 201);
+        $idempotency->remember($request, $tenant->id, 'acquisition', 'activity.created', 'activity', $activity->id, $response);
+
+        return $response;
     }
 }

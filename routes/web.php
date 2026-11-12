@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BuyerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\WholesaleDashboardController;
 use App\Http\Controllers\DncController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ActivityController;
@@ -121,6 +122,9 @@ Route::middleware(['auth', 'tenant', 'require2fa'])->group(function () {
     // ── Open to ALL authenticated roles ──────────────────────────────
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/wholesale-os', [WholesaleDashboardController::class, 'index'])
+        ->middleware('role:admin,acquisition_agent,disposition_agent,agent')
+        ->name('wholesale.dashboard');
     Route::post('/dashboard/widgets', [DashboardController::class, 'updateWidgets'])->name('dashboard.updateWidgets');
     // Dashboard data API (field scouts have no charts, so exclude them)
     Route::get('/api/dashboard-data', [ReportController::class, 'dashboardData'])

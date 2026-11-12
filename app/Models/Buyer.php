@@ -11,6 +11,8 @@ class Buyer extends Model
     use HasFactory;
 
     protected $fillable = [
+        'external_id',
+        'external_source',
         'tenant_id',
         'first_name',
         'last_name',
@@ -38,7 +40,10 @@ class Buyer extends Model
     {
         return [
             'max_purchase_price' => 'decimal:2',
+            'min_purchase_price' => 'decimal:2',
             'preferred_property_types' => 'array',
+            'preferred_strategies' => 'array',
+            'preferred_conditions' => 'array',
             'preferred_zip_codes' => 'array',
             'preferred_states' => 'array',
             'asset_classes' => 'array',
@@ -46,6 +51,7 @@ class Buyer extends Model
             'pof_amount' => 'decimal:2',
             'pof_verified_at' => 'datetime',
             'buyer_score' => 'integer',
+            'monthly_capacity' => 'integer',
             'total_purchases' => 'integer',
             'avg_close_days' => 'decimal:1',
             'last_purchase_at' => 'datetime',

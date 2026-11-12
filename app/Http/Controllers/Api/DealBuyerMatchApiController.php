@@ -1,15 +1,15 @@
 <?php
 
-namespace App\\Http\\Controllers\\Api;
+namespace App\Http\Controllers\Api;
 
-use App\\Http\\Controllers\\Controller;
-use App\\Models\\Buyer;
-use App\\Models\\Deal;
-use App\\Models\\DealBuyerMatch;
-use App\\Services\\BuyerMatchService;
-use App\\Services\\IntegrationIdempotencyService;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Validator;
+use App\Http\Controllers\Controller;
+use App\Models\Buyer;
+use App\Models\Deal;
+use App\Models\DealBuyerMatch;
+use App\Services\BuyerMatchService;
+use App\Services\IntegrationIdempotencyService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class DealBuyerMatchApiController extends Controller
 {

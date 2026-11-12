@@ -14,6 +14,9 @@ class IntegrationContractTest extends TestCase
         parent::setUp();
 
         $this->createTenantWithAdmin([
+            'name' => 'Integration Contract Company',
+            'slug' => 'integration-contract-company',
+            'email' => 'integration-contract@test.com',
             'api_key' => 'test-api-key-integration',
             'api_enabled' => true,
         ]);
@@ -110,6 +113,9 @@ class IntegrationContractTest extends TestCase
         ], $this->headers)->assertStatus(201);
 
         $otherTenant = $this->createTenantWithAdmin([
+            'name' => 'Integration Contract Company Two',
+            'slug' => 'integration-contract-company-two',
+            'email' => 'integration-contract-two@test.com',
             'api_key' => 'test-api-key-integration-other',
             'api_enabled' => true,
         ]);
@@ -130,9 +136,6 @@ class IntegrationContractTest extends TestCase
             ->where('external_source', 'whole-stack')
             ->count());
 
-        $this->assertNotSame(
-            $this->tenant->id,
-            $otherTenant->id
-        );
+        $this->assertNotSame($this->tenant->id, $otherTenant->id);
     }
 }

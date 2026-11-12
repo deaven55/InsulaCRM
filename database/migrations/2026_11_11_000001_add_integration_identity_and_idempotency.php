@@ -30,7 +30,7 @@ return new class extends Migration
                 $table->unsignedSmallInteger('response_status')->nullable();
                 $table->timestamps();
 
-                $table->unique(['tenant_id', 'source', 'idempotency_key']);
+                $table->unique(['tenant_id', 'source', 'idempotency_key'], 'integration_idempotency_unique');
                 $table->index(['tenant_id', 'source', 'event_type']);
             });
         }

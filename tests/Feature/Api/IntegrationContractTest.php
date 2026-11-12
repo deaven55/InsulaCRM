@@ -112,6 +112,8 @@ class IntegrationContractTest extends TestCase
             'external_source' => 'whole-stack',
         ], $this->headers)->assertStatus(201);
 
+        $firstTenantId = $this->tenant->id;
+
         $otherTenant = $this->createTenantWithAdmin([
             'name' => 'Integration Contract Company Two',
             'slug' => 'integration-contract-company-two',
@@ -136,6 +138,6 @@ class IntegrationContractTest extends TestCase
             ->where('external_source', 'whole-stack')
             ->count());
 
-        $this->assertNotSame($this->tenant->id, $otherTenant->id);
+        $this->assertNotSame($firstTenantId, $otherTenant->id);
     }
 }
